@@ -11,11 +11,6 @@ let slideshowInterval;
 document.addEventListener("DOMContentLoaded", () => {
   const firstName = localStorage.getItem("firstName");
 
-  if (!firstName) {
-    window.location.href = "index.html";
-    return;
-  }
-
   document.getElementById("userName").textContent = `Hello, ${firstName}!`;
 
   fetchRecipes();
