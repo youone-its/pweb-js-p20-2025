@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Recipes Collection</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-container">
+        <h2>Recipe Collection</h2>
+        <div class="nav-right">
+          <span id="userName" class="user-name"></span>
+          <button id="logoutBtn" class="btn-logout">Logout</button>
+        </div>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <div class="container">
+        <div class="controls">
+          <div class="search-container">
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Search by name, cuisine, ingredients, or tags..."
+              class="search-input"
+            />
+          </div>
+
+          <div class="filter-container">
+            <label for="cuisineFilter">Filter by Cuisine:</label>
+            <select id="cuisineFilter" class="cuisine-select">
+              <option value="">All Cuisines</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="loadingState" class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading recipes...</p>
+        </div>
+
+        <div id="errorState" class="error-state hidden"></div>
+
+        <div id="recipesGrid" class="recipes-grid"></div>
+
+        <div id="showMoreContainer" class="show-more-container hidden">
+          <button id="showMoreBtn" class="btn-show-more">Show More</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Modal for Recipe Detail -->
+    <div id="recipeModal" class="modal hidden">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <div id="modalBody"></div>
+      </div>
+    </div>
+
+    <script src="recipes.js"></script>
+  </body>
+</html>
