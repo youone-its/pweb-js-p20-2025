@@ -1,11 +1,13 @@
-// Global variables
 let allRecipes = [];
 let filteredRecipes = [];
+let slideshowRecipes = []; 
 let displayedRecipes = 0;
+let slideIndex = 1; 
 const recipesPerPage = 9;
+const numSlides = 5; 
 let debounceTimer;
+let slideshowInterval;
 
-// Check authentication
 document.addEventListener("DOMContentLoaded", () => {
   const firstName = localStorage.getItem("firstName");
 
@@ -14,20 +16,15 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // Display user name
   document.getElementById("userName").textContent = `Hello, ${firstName}!`;
 
-  // Initialize page
   fetchRecipes();
   setupEventListeners();
 });
 
-// Setup event listeners
 function setupEventListeners() {
-  // Logout button
   document.getElementById("logoutBtn").addEventListener("click", handleLogout);
 
-  // Search input with debouncing
   document.getElementById("searchInput").addEventListener("input", (e) => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
@@ -35,17 +32,22 @@ function setupEventListeners() {
     }, 500);
   });
 
-  // Cuisine filter
   document.getElementById("cuisineFilter").addEventListener("change", (e) => {
     handleFilter(e.target.value);
   });
 
-  // Show more button
   document.getElementById("showMoreBtn").addEventListener("click", () => {
     displayRecipes();
   });
+  
+  document.getElementById("prevSlideBtn").addEventListener("click", () => {
+    plusSlides(-1);
+  });
 
-  // Modal close
+  document.getElementById("nextSlideBtn").addEventListener("click", () => {
+    plusSlides(1);
+  });
+
   const modal = document.getElementById("recipeModal");
   const closeBtn = document.querySelector(".close-modal");
 
@@ -60,7 +62,6 @@ function setupEventListeners() {
   });
 }
 
-// Fetch recipes from API
 async function fetchRecipes() {
   const loadingState = document.getElementById("loadingState");
   const errorState = document.getElementById("errorState");
@@ -81,10 +82,12 @@ async function fetchRecipes() {
     allRecipes = data.recipes;
     filteredRecipes = [...allRecipes];
 
-    // Populate cuisine filter
+    selectSlideshowRecipes();
+    renderSlideshow();
+    startAutoSlideshow();
+
     populateCuisineFilter();
 
-    // Display recipes
     displayedRecipes = 0;
     displayRecipes();
 
@@ -96,7 +99,91 @@ async function fetchRecipes() {
   }
 }
 
-// Populate cuisine filter dropdown
+function startAutoSlideshow() {
+    if (slideshowInterval) {
+        clearInterval(slideshowInterval);
+    }
+    
+    slideshowInterval = setInterval(() => {
+        plusSlides(1);
+    }, 4000);
+}
+
+function selectSlideshowRecipes() {
+  if (allRecipes.length === 0) return;
+  
+  const shuffled = allRecipes.sort(() => 0.5 - Math.random());
+  slideshowRecipes = shuffled.slice(0, numSlides);
+}
+
+function renderSlideshow() {
+    const slideshowElement = document.getElementById("recipeSlideshow");
+    const slideshowInner = document.getElementById("slideshowInner");
+    const dotsContainer = document.getElementById("dotsContainer");
+    
+    if (slideshowRecipes.length === 0) {
+        slideshowElement.classList.add("hidden");
+        return;
+    }
+
+    slideshowElement.classList.remove("hidden");
+    slideshowInner.innerHTML = '';
+    dotsContainer.innerHTML = '';
+
+    slideshowRecipes.forEach((recipe, index) => {
+        const slide = document.createElement('div');
+        slide.className = 'slide';
+        slide.innerHTML = `
+            <img src="${recipe.image}" alt="${recipe.name}" class="slide-image">
+            <div class="slide-content">
+                <h2>${recipe.name}</h2>
+                <p>Cuisine: ${recipe.cuisine} | Rating: ${recipe.rating.toFixed(1)} ${generateStars(recipe.rating)}</p>
+                <button class="btn-view-recipe" data-recipe-id="${recipe.id}">
+                    View Full Recipe
+                </button>
+            </div>
+        `;
+        slideshowInner.appendChild(slide);
+        
+        slide.querySelector('button').addEventListener('click', () => viewRecipeDetail(recipe.id));
+
+        const dot = document.createElement('span');
+        dot.className = 'dot';
+        dot.addEventListener('click', () => currentSlide(index + 1));
+        dotsContainer.appendChild(dot);
+    });
+    
+    showSlides(slideIndex);
+}
+
+function showSlides(n) {
+    const slides = document.getElementsByClassName("slide");
+    const dots = document.getElementsByClassName("dot");
+    const slideshowInner = document.getElementById("slideshowInner");
+    
+    if (slides.length === 0) return;
+
+    if (n > slides.length) { slideIndex = 1 } 
+    if (n < 1) { slideIndex = slides.length }
+    
+    slideshowInner.style.transform = `translateX(-${(slideIndex - 1) * 100}%)`;
+
+    for (let i = 0; i < dots.length; i++) {
+        dots[i].className = dots[i].className.replace(" active", "");
+    }
+    dots[slideIndex - 1].className += " active";
+}
+
+function plusSlides(n) {
+  startAutoSlideshow(); 
+  showSlides(slideIndex += n);
+}
+
+function currentSlide(n) {
+  startAutoSlideshow(); 
+  showSlides(slideIndex = n);
+}
+
 function populateCuisineFilter() {
   const cuisineFilter = document.getElementById("cuisineFilter");
   const cuisines = [...new Set(allRecipes.map((recipe) => recipe.cuisine))];
@@ -109,7 +196,6 @@ function populateCuisineFilter() {
   });
 }
 
-// Display recipes
 function displayRecipes() {
   const recipesGrid = document.getElementById("recipesGrid");
   const showMoreContainer = document.getElementById("showMoreContainer");
@@ -126,7 +212,6 @@ function displayRecipes() {
 
   displayedRecipes += recipesToShow.length;
 
-  // Show or hide "Show More" button
   if (displayedRecipes >= filteredRecipes.length) {
     showMoreContainer.classList.add("hidden");
   } else {
@@ -134,7 +219,6 @@ function displayRecipes() {
   }
 }
 
-// Create recipe card
 function createRecipeCard(recipe) {
   const card = document.createElement("div");
   card.className = "recipe-card";
@@ -163,18 +247,19 @@ function createRecipeCard(recipe) {
                 <h4>Ingredients:</h4>
                 <p class="ingredients-list">${ingredientsPreview}</p>
             </div>
-            <button class="btn-view-recipe" onclick="viewRecipeDetail(${
+            <button class="btn-view-recipe" data-recipe-id="${
               recipe.id
-            })">
+            }">
                 View Full Recipe
             </button>
         </div>
     `;
 
+  card.querySelector('.btn-view-recipe').addEventListener('click', () => viewRecipeDetail(recipe.id));
+
   return card;
 }
 
-// Generate star rating
 function generateStars(rating) {
   const fullStars = Math.floor(rating);
   const hasHalfStar = rating % 1 >= 0.5;
@@ -196,7 +281,6 @@ function generateStars(rating) {
   return stars;
 }
 
-// Handle search
 function handleSearch(query) {
   const searchTerm = query.toLowerCase().trim();
 
@@ -215,7 +299,6 @@ function handleSearch(query) {
     });
   }
 
-  // Apply current cuisine filter if any
   const currentCuisine = document.getElementById("cuisineFilter").value;
   if (currentCuisine) {
     filteredRecipes = filteredRecipes.filter(
@@ -223,13 +306,11 @@ function handleSearch(query) {
     );
   }
 
-  // Reset display
   displayedRecipes = 0;
   document.getElementById("recipesGrid").innerHTML = "";
   displayRecipes();
 }
 
-// Handle cuisine filter
 function handleFilter(cuisine) {
   if (!cuisine) {
     filteredRecipes = [...allRecipes];
@@ -237,7 +318,6 @@ function handleFilter(cuisine) {
     filteredRecipes = allRecipes.filter((recipe) => recipe.cuisine === cuisine);
   }
 
-  // Apply current search if any
   const searchTerm = document
     .getElementById("searchInput")
     .value.toLowerCase()
@@ -255,13 +335,11 @@ function handleFilter(cuisine) {
     });
   }
 
-  // Reset display
   displayedRecipes = 0;
   document.getElementById("recipesGrid").innerHTML = "";
   displayRecipes();
 }
 
-// View recipe detail in modal
 function viewRecipeDetail(recipeId) {
   const recipe = allRecipes.find((r) => r.id === recipeId);
   if (!recipe) return;
@@ -343,7 +421,6 @@ function viewRecipeDetail(recipeId) {
   modal.classList.remove("hidden");
 }
 
-// Handle logout
 function handleLogout() {
   if (confirm("Are you sure you want to logout?")) {
     localStorage.removeItem("firstName");
@@ -351,6 +428,3 @@ function handleLogout() {
     window.location.href = "index.html";
   }
 }
-
-// Make viewRecipeDetail available globally
-window.viewRecipeDetail = viewRecipeDetail;

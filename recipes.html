@@ -10,6 +10,23 @@
     <nav class="navbar">
       <div class="nav-container">
         <h2>Recipe Collection</h2>
+        
+        <div class="controls-nav"> 
+          <div class="search-container-nav">
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Search by name, cuisine, ingredients, or tags..."
+              class="search-input-nav"
+            />
+          </div>
+
+          <div class="filter-container-nav">
+            <select id="cuisineFilter" class="cuisine-select-nav">
+              <option value="">All Cuisines</option>
+            </select>
+          </div>
+        </div>
         <div class="nav-right">
           <span id="userName" class="user-name"></span>
           <button id="logoutBtn" class="btn-logout">Logout</button>
@@ -19,24 +36,18 @@
 
     <main class="main-content">
       <div class="container">
-        <div class="controls">
-          <div class="search-container">
-            <input
-              type="text"
-              id="searchInput"
-              placeholder="Search by name, cuisine, ingredients, or tags..."
-              class="search-input"
-            />
-          </div>
-
-          <div class="filter-container">
-            <label for="cuisineFilter">Filter by Cuisine:</label>
-            <select id="cuisineFilter" class="cuisine-select">
-              <option value="">All Cuisines</option>
-            </select>
-          </div>
+        
+        <div id="recipeSlideshow" class="slideshow hidden">
+            <div id="slideshowInner" class="slideshow-inner">
+                </div>
+            <div class="slideshow-controls">
+                <a class="prev" id="prevSlideBtn">&#10094;</a>
+                <a class="next" id="nextSlideBtn">&#10095;</a>
+            </div>
+            <div id="dotsContainer" class="dots-container">
+                </div>
         </div>
-
+        
         <div id="loadingState" class="loading-state">
           <div class="spinner"></div>
           <p>Loading recipes...</p>
@@ -52,11 +63,11 @@
       </div>
     </main>
 
-    <!-- Modal for Recipe Detail -->
     <div id="recipeModal" class="modal hidden">
       <div class="modal-content">
         <span class="close-modal">&times;</span>
-        <div id="modalBody"></div>
+        <div id="modalBody">
+        </div>
       </div>
     </div>
 
