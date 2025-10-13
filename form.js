@@ -163,3 +163,8 @@ function handleRegister(event) {
         }, 1000);
     }, 1000);
 }
+
+// di form.js
+function goToRecipes() {
+  window.location.href = "recipes.html";
+}
